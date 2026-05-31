@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { geoAlbersUsa, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
@@ -28,6 +28,7 @@ import {
   mockShowsPerYear,
   mockRecentConcerts,
   mockChasingList,
+  mockAllConcerts,
 } from '../lib/mockData';
 
 // ── Hero Stat Chip ──────────────────────────────────────────────
@@ -67,70 +68,168 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 // ── US Map ──────────────────────────────────────────────────────
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
-
-const CONCERT_COORDS: [number, number][] = [
-  [-74.006,  40.713],  // New York, NY
-  [-71.057,  42.361],  // Boston, MA
-  [-104.984, 39.739],  // Denver, CO
-  [-87.629,  41.878],  // Chicago, IL
-  [-89.401,  43.073],  // Madison, WI
-  [-76.612,  39.290],  // Baltimore, MD
-  [-118.243, 34.052],  // Los Angeles, CA
-  [-86.158,  39.768],  // Indianapolis, IN
-];
-
 const W = 960, H = 600;
+const MIN_ZOOM = 1, MAX_ZOOM = 8;
 
-function USMapCard() {
-  const [statePaths, setStatePaths] = useState<string[]>([]);
-  const [pins, setPins] = useState<{ x: number; y: number }[]>([]);
+type XForm = { x: number; y: number; k: number };
+const DEFAULT_XFORM: XForm = { x: 0, y: 0, k: 1 };
 
+function clampXForm({ x, y, k }: XForm): XForm {
+  const maxX = 0, minX = W * (1 - k);
+  const maxY = 0, minY = H * (1 - k);
+  return {
+    k,
+    x: Math.min(maxX, Math.max(minX, x)),
+    y: Math.min(maxY, Math.max(minY, y)),
+  };
+}
+
+interface StateFeature { path: string; name: string; }
+
+function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const dragRef = useRef<{ mx: number; my: number; tx: number; ty: number } | null>(null);
+  const [states, setStates] = useState<StateFeature[]>([]);
+  const [pins, setPins]     = useState<{ x: number; y: number }[]>([]);
+  const [xform, setXform]   = useState<XForm>(DEFAULT_XFORM);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Load TopoJSON and project everything
   useEffect(() => {
-    const projection = geoAlbersUsa().scale(1300).translate([W / 2, H / 2]);
-    const path = geoPath().projection(projection);
+    const proj = geoAlbersUsa().scale(1300).translate([W / 2, H / 2]);
+    const path = geoPath().projection(proj);
 
     fetch(GEO_URL)
       .then(r => r.json())
       .then((topo: Topology) => {
-        const states = feature(topo, topo.objects.states as GeometryCollection);
-        if ('features' in states) {
-          setStatePaths(states.features.map(f => path(f) ?? ''));
+        const fc = feature(topo, topo.objects.states as GeometryCollection);
+        if ('features' in fc) {
+          setStates(fc.features.map(f => ({
+            path: path(f) ?? '',
+            name: (f.properties as { name: string }).name,
+          })));
         }
+        // Project concert coords from mock data
         setPins(
-          CONCERT_COORDS.flatMap(coord => {
-            const p = projection(coord);
+          mockAllConcerts.flatMap(c => {
+            if (c.lng == null || c.lat == null) return [];
+            const p = proj([c.lng, c.lat]);
             return p ? [{ x: p[0], y: p[1] }] : [];
           })
         );
       });
   }, []);
 
+  // Wheel zoom — must be non-passive to call preventDefault
+  const onWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const svg = svgRef.current!;
+    const rect = svg.getBoundingClientRect();
+    const sx = W / rect.width;
+    const mx = (e.clientX - rect.left) * sx;
+    const my = (e.clientY - rect.top)  * sx;
+    setXform(prev => {
+      const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
+      const k = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev.k * factor));
+      return clampXForm({
+        k,
+        x: mx - (mx - prev.x) * (k / prev.k),
+        y: my - (my - prev.y) * (k / prev.k),
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, [onWheel]);
+
+  // Pointer drag
+  const onPointerDown = (e: React.PointerEvent) => {
+    (e.target as Element).setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    const rect = svgRef.current!.getBoundingClientRect();
+    const sx = W / rect.width;
+    dragRef.current = {
+      mx: e.clientX * sx,
+      my: e.clientY * sx,
+      tx: xform.x,
+      ty: xform.y,
+    };
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const rect = svgRef.current!.getBoundingClientRect();
+    const sx = W / rect.width;
+    const dx = e.clientX * sx - dragRef.current.mx;
+    const dy = e.clientY * sx - dragRef.current.my;
+    setXform(prev => clampXForm({
+      k: prev.k,
+      x: dragRef.current!.tx + dx,
+      y: dragRef.current!.ty + dy,
+    }));
+  };
+
+  const onPointerUp = () => {
+    dragRef.current = null;
+    setIsDragging(false);
+  };
+
+  const resetZoom = () => setXform(DEFAULT_XFORM);
+
   return (
     <div className="relative bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm dark:border dark:border-slate-700/60 overflow-hidden p-6 h-full min-h-[280px]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">Shows Map</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">14 states visited</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{visitedStates.size} states visited</p>
         </div>
-        <Compass className="w-5 h-5 text-slate-400" />
+        <div className="flex items-center gap-2">
+          {xform.k > 1 && (
+            <button
+              onClick={resetZoom}
+              className="text-xs text-slate-500 dark:text-slate-400 hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              Reset
+            </button>
+          )}
+          <Compass className="w-5 h-5 text-slate-400" />
+        </div>
       </div>
 
-      <div className="w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-          {statePaths.length === 0 ? (
-            <text x={W / 2} y={H / 2} textAnchor="middle" fill="#94a3b8" fontSize={14}>
-              Loading map…
-            </text>
-          ) : (
-            <>
-              {statePaths.map((d, i) => (
-                <path key={i} d={d} fill="transparent" stroke="#94a3b8" strokeWidth={0.8} />
-              ))}
-              {pins.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={8} fill="#f97316" stroke="white" strokeWidth={2} />
-              ))}
-            </>
-          )}
+      <div className="w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50 select-none">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          className={`w-full h-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
+        >
+          <g transform={`translate(${xform.x},${xform.y}) scale(${xform.k})`}>
+            {states.length === 0 ? (
+              <text x={W / 2} y={H / 2} textAnchor="middle" fill="#94a3b8" fontSize={14}>Loading…</text>
+            ) : (
+              <>
+                {states.map(({ path: d, name }, i) => (
+                  <path
+                    key={i}
+                    d={d}
+                    fill={visitedStates.has(name) ? 'rgba(249,115,22,0.18)' : 'transparent'}
+                    stroke={visitedStates.has(name) ? 'rgba(249,115,22,0.5)' : '#94a3b8'}
+                    strokeWidth={visitedStates.has(name) ? 1 : 0.6}
+                  />
+                ))}
+                {pins.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={6 / xform.k} fill="#f97316" stroke="white" strokeWidth={1.5 / xform.k} />
+                ))}
+              </>
+            )}
+          </g>
         </svg>
       </div>
     </div>
@@ -141,6 +240,7 @@ function USMapCard() {
 // ── Main Dashboard ──────────────────────────────────────────────
 export default function Dashboard() {
   const stats = mockStats;
+  const visitedStates = new Set(mockAllConcerts.map(c => c.state));
 
   return (
     <div className="space-y-6">
@@ -182,7 +282,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Map — 7 cols */}
         <div className="lg:col-span-7">
-          <USMapCard />
+          <USMapCard visitedStates={visitedStates} />
         </div>
 
         {/* Chasing List — 5 cols */}
