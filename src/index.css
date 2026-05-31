@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #3B82F6;
+  --color-bg-light: #F8FAFC;
+  --color-bg-dark: #0F172A;
+  --color-card-light: #FFFFFF;
+  --color-card-dark: #1E293B;
+  --color-text-light: #0F172A;
+  --color-text-dark: #F1F5F9;
+  --color-muted: #94A3B8;
+}
+
+html {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+html.dark body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recharts customization */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(148, 163, 184, 0.2);
+}
+
+.recharts-text {
+  fill: var(--color-muted);
+  font-size: 12px;
+}
