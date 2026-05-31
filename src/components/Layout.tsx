@@ -14,14 +14,18 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F1F5F9] transition-colors duration-200">
-      {/* Top Nav */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-16 gap-6">
-          {/* Logo */}
-          <NavLink to="/" className="shrink-0">
-            <img src="/ps-header.png" alt="PhishStats" className="h-10 w-auto" />
-          </NavLink>
+      {/* Header Banner — edge-to-edge */}
+      <NavLink to="/" className="block w-full">
+        <img
+          src="/ps-header.png"
+          alt="PhishStats"
+          className="w-full h-36 object-cover object-center block"
+        />
+      </NavLink>
 
+      {/* Sticky Nav */}
+      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-1 flex-1">
             {navItems.map(({ to, label, icon: Icon, exact }) => (
