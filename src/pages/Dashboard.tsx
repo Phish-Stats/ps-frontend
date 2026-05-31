@@ -22,7 +22,9 @@ import {
   Flame,
   Building2,
   Clock,
+  X,
 } from 'lucide-react';
+import type { Concert } from '../types';
 import {
   mockStats,
   mockShowsPerYear,
@@ -85,16 +87,23 @@ function clampXForm({ x, y, k }: XForm): XForm {
 }
 
 interface StateFeature { path: string; name: string; }
+interface ConcertGroup {
+  x: number; y: number;
+  venue: string; city: string; state: string;
+  concerts: Concert[];
+}
 
 function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ mx: number; my: number; tx: number; ty: number } | null>(null);
+  const hasDraggedRef = useRef(false);
   const [states, setStates] = useState<StateFeature[]>([]);
-  const [pins, setPins]     = useState<{ x: number; y: number }[]>([]);
+  const [groups, setGroups] = useState<ConcertGroup[]>([]);
   const [xform, setXform]   = useState<XForm>(DEFAULT_XFORM);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeGroup, setActiveGroup] = useState<ConcertGroup | null>(null);
 
-  // Load TopoJSON and project everything
+  // Load TopoJSON and project + group concerts by venue
   useEffect(() => {
     const proj = geoAlbersUsa().scale(1300).translate([W / 2, H / 2]);
     const path = geoPath().projection(proj);
@@ -109,14 +118,22 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
             name: (f.properties as { name: string }).name,
           })));
         }
-        // Project concert coords from mock data
-        setPins(
-          mockAllConcerts.flatMap(c => {
-            if (c.lng == null || c.lat == null) return [];
-            const p = proj([c.lng, c.lat]);
-            return p ? [{ x: p[0], y: p[1] }] : [];
-          })
-        );
+        // Group concerts by venue
+        const venueMap: Record<string, ConcertGroup> = {};
+        for (const c of mockAllConcerts) {
+          if (c.lng == null || c.lat == null) continue;
+          const p = proj([c.lng, c.lat]);
+          if (!p) continue;
+          if (!venueMap[c.venue]) {
+            venueMap[c.venue] = { x: p[0], y: p[1], venue: c.venue, city: c.city, state: c.state, concerts: [] };
+          }
+          venueMap[c.venue].concerts.push(c);
+        }
+        const grouped = Object.values(venueMap);
+        for (const g of grouped) {
+          g.concerts.sort((a: Concert, b: Concert) => b.date.localeCompare(a.date));
+        }
+        setGroups(grouped);
       });
   }, []);
 
@@ -146,10 +163,11 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
     return () => svg.removeEventListener('wheel', onWheel);
   }, [onWheel]);
 
-  // Pointer drag
+  // Pointer drag — track whether moved enough to count as drag
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture(e.pointerId);
     setIsDragging(true);
+    hasDraggedRef.current = false;
     const rect = svgRef.current!.getBoundingClientRect();
     const sx = W / rect.width;
     dragRef.current = {
@@ -166,6 +184,7 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
     const sx = W / rect.width;
     const dx = e.clientX * sx - dragRef.current.mx;
     const dy = e.clientY * sx - dragRef.current.my;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDraggedRef.current = true;
     setXform(prev => clampXForm({
       k: prev.k,
       x: dragRef.current!.tx + dx,
@@ -179,6 +198,23 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
   };
 
   const resetZoom = () => setXform(DEFAULT_XFORM);
+
+  // Click on map background closes popup (if not a drag)
+  const onSvgClick = () => {
+    if (!hasDraggedRef.current) setActiveGroup(null);
+  };
+
+  const handlePinClick = (e: React.MouseEvent, group: ConcertGroup) => {
+    e.stopPropagation();
+    if (hasDraggedRef.current) return;
+    setActiveGroup(prev => prev?.venue === group.venue ? null : group);
+  };
+
+  // Convert SVG coords → % of the map wrapper (accounts for current transform)
+  const popupPos = activeGroup ? {
+    left: `${((activeGroup.x * xform.k + xform.x) / W) * 100}%`,
+    top:  `${((activeGroup.y * xform.k + xform.y) / H) * 100}%`,
+  } : null;
 
   return (
     <div className="relative bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm dark:border dark:border-slate-700/60 overflow-hidden p-6 h-full min-h-[280px]">
@@ -200,37 +236,115 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
         </div>
       </div>
 
-      <div className="w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50 select-none">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${W} ${H}`}
-          className={`w-full h-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
-        >
-          <g transform={`translate(${xform.x},${xform.y}) scale(${xform.k})`}>
-            {states.length === 0 ? (
-              <text x={W / 2} y={H / 2} textAnchor="middle" fill="#94a3b8" fontSize={14}>Loading…</text>
-            ) : (
-              <>
-                {states.map(({ path: d, name }, i) => (
-                  <path
-                    key={i}
-                    d={d}
-                    fill={visitedStates.has(name) ? 'rgba(249,115,22,0.18)' : 'transparent'}
-                    stroke={visitedStates.has(name) ? 'rgba(249,115,22,0.5)' : '#94a3b8'}
-                    strokeWidth={visitedStates.has(name) ? 1 : 0.6}
-                  />
+      {/* Wrapper is relative so popup can be positioned over the SVG */}
+      <div className="relative w-full select-none">
+        <div className="w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${W} ${H}`}
+            className={`w-full h-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerUp}
+            onClick={onSvgClick}
+          >
+            <g transform={`translate(${xform.x},${xform.y}) scale(${xform.k})`}>
+              {states.length === 0 ? (
+                <text x={W / 2} y={H / 2} textAnchor="middle" fill="#94a3b8" fontSize={14}>Loading…</text>
+              ) : (
+                <>
+                  {states.map(({ path: d, name }, i) => (
+                    <path
+                      key={i}
+                      d={d}
+                      fill={visitedStates.has(name) ? 'rgba(249,115,22,0.18)' : 'transparent'}
+                      stroke={visitedStates.has(name) ? 'rgba(249,115,22,0.5)' : '#94a3b8'}
+                      strokeWidth={visitedStates.has(name) ? 1 : 0.6}
+                    />
+                  ))}
+                  {groups.map((g, i) => (
+                    <circle
+                      key={i}
+                      cx={g.x} cy={g.y}
+                      r={6 / xform.k}
+                      fill={activeGroup?.venue === g.venue ? '#ea580c' : '#f97316'}
+                      stroke="white"
+                      strokeWidth={1.5 / xform.k}
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => handlePinClick(e, g)}
+                    />
+                  ))}
+                </>
+              )}
+            </g>
+          </svg>
+        </div>
+
+        {/* Popup — floats above the map using SVG-coord → % conversion */}
+        {activeGroup && popupPos && (
+          <div
+            className="absolute z-20 pointer-events-auto"
+            style={{
+              left: popupPos.left,
+              top: popupPos.top,
+              transform: 'translate(-50%, calc(-100% - 14px))',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="relative bg-white dark:bg-[#1E293B] rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 min-w-[200px] max-w-[260px]">
+              {/* Downward arrow */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0"
+                style={{
+                  borderLeft: '7px solid transparent',
+                  borderRight: '7px solid transparent',
+                  borderTop: '7px solid',
+                  borderTopColor: 'rgb(226 232 240)', // slate-200 border
+                }}
+              />
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0"
+                style={{
+                  marginTop: '-1px',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '6px solid',
+                  // Tailwind can't inline dynamic dark: classes — use CSS vars or a data attr trick
+                  borderTopColor: 'var(--popup-bg, white)',
+                }}
+              />
+
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-tight truncate">{activeGroup.venue}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{activeGroup.city}, {activeGroup.state}</p>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setActiveGroup(null); }}
+                  className="shrink-0 mt-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <ul className="space-y-1.5 border-t border-slate-100 dark:border-slate-700 pt-2">
+                {activeGroup.concerts.map(c => (
+                  <li key={c.id} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-700 dark:text-slate-300">
+                      {new Date(c.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    {c.setlist_url ? (
+                      <a href={c.setlist_url} className="text-xs text-primary hover:text-primary-600 font-medium shrink-0 flex items-center gap-0.5">
+                        Setlist <ArrowRight className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">No setlist</span>
+                    )}
+                  </li>
                 ))}
-                {pins.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r={6 / xform.k} fill="#f97316" stroke="white" strokeWidth={1.5 / xform.k} />
-                ))}
-              </>
-            )}
-          </g>
-        </svg>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
