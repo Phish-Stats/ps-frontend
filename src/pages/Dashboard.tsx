@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom';
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+
+const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 import {
   BarChart,
   Bar,
@@ -61,20 +64,19 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
-// ── US Map Placeholder ──────────────────────────────────────────
-function USMapCard() {
-  // Concert pin positions roughly mapped to US coordinates
-  const pins = [
-    { x: '79%', y: '28%', label: 'NY' },   // New York
-    { x: '62%', y: '20%', label: 'WI' },   // Wisconsin
-    { x: '76%', y: '22%', label: 'MA' },   // Boston
-    { x: '42%', y: '38%', label: 'CO' },   // Colorado
-    { x: '60%', y: '44%', label: 'IN' },   // Indiana
-    { x: '62%', y: '34%', label: 'IL' },   // Chicago
-    { x: '74%', y: '34%', label: 'MD' },   // Maryland
-    { x: '17%', y: '52%', label: 'CA' },   // California
-  ];
+// ── US Map ──────────────────────────────────────────────────────
+const MAP_PINS = [
+  { label: 'NY',  coordinates: [-74.006, 40.713] as [number, number] },
+  { label: 'MA',  coordinates: [-71.057, 42.361] as [number, number] },
+  { label: 'CO',  coordinates: [-104.99, 39.739] as [number, number] },
+  { label: 'IL',  coordinates: [-87.629, 41.878] as [number, number] },
+  { label: 'WI',  coordinates: [-89.401, 43.073] as [number, number] },
+  { label: 'MD',  coordinates: [-76.612, 39.29]  as [number, number] },
+  { label: 'CA',  coordinates: [-118.24, 34.052] as [number, number] },
+  { label: 'IN',  coordinates: [-86.158, 39.768] as [number, number] },
+];
 
+function USMapCard() {
   return (
     <div className="relative bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm dark:border dark:border-slate-700/60 overflow-hidden p-6 h-full min-h-[280px]">
       <div className="flex items-center justify-between mb-4">
@@ -85,41 +87,35 @@ function USMapCard() {
         <Compass className="w-5 h-5 text-slate-400" />
       </div>
 
-      {/* SVG Map Background */}
-      <div className="relative w-full h-48 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
-        <svg
-          viewBox="0 0 960 600"
-          className="absolute inset-0 w-full h-full text-slate-400 dark:text-slate-500 opacity-40 dark:opacity-60"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
+      <div className="w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
+        <ComposableMap
+          projection="geoAlbersUsa"
+          style={{ width: '100%', height: 'auto' }}
         >
-          {/* Simplified US outline */}
-          <path d="M 80 120 L 180 80 L 260 70 L 320 60 L 420 55 L 520 50 L 640 55 L 720 65 L 790 85 L 840 95 L 880 110 L 890 160 L 880 200 L 860 260 L 830 300 L 820 340 L 800 380 L 760 420 L 720 440 L 680 450 L 620 455 L 560 450 L 500 440 L 420 445 L 360 460 L 280 470 L 220 460 L 180 450 L 120 430 L 80 400 L 65 360 L 60 300 L 65 240 L 70 180 Z" />
-          {/* Grid dots pattern */}
-          {Array.from({ length: 12 }, (_, row) =>
-            Array.from({ length: 20 }, (_, col) => (
-              <circle
-                key={`${row}-${col}`}
-                cx={48 + col * 46}
-                cy={60 + row * 44}
-                r="1.5"
-                fill="currentColor"
-              />
-            ))
-          )}
-        </svg>
-
-        {/* Concert pins */}
-        {pins.map((pin) => (
-          <div
-            key={pin.label}
-            className="absolute flex flex-col items-center"
-            style={{ left: pin.x, top: pin.y, transform: 'translate(-50%, -50%)' }}
-          >
-            <div className="w-3 h-3 rounded-full bg-primary ring-2 ring-white dark:ring-slate-800 shadow-md" />
-          </div>
-        ))}
+          <Geographies geography={GEO_URL}>
+            {({ geographies }: { geographies: { rsmKey: string; [k: string]: unknown }[] }) =>
+              geographies.map((geo: { rsmKey: string; [k: string]: unknown }) => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill="transparent"
+                  stroke="currentColor"
+                  strokeWidth={0.5}
+                  style={{
+                    default: { color: '#94a3b8', outline: 'none' },
+                    hover:   { color: '#94a3b8', outline: 'none' },
+                    pressed: { color: '#94a3b8', outline: 'none' },
+                  }}
+                />
+              ))
+            }
+          </Geographies>
+          {MAP_PINS.map(({ label, coordinates }) => (
+            <Marker key={label} coordinates={coordinates}>
+              <circle r={5} fill="#f97316" stroke="#fff" strokeWidth={1.5} />
+            </Marker>
+          ))}
+        </ComposableMap>
       </div>
     </div>
   );
