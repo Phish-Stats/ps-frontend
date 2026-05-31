@@ -31,7 +31,7 @@ export default function Songs() {
             placeholder="Search songs or albums..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-shadow"
+            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
           />
         </div>
       </div>
@@ -52,8 +52,8 @@ export default function Songs() {
                 className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm dark:border dark:border-slate-700/60 p-4 hover:shadow-md dark:hover:border-slate-600 transition-all group"
               >
                 {/* Album art placeholder */}
-                <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-orange-400/20 to-pink-400/20 dark:from-orange-900/40 dark:to-pink-900/40 flex items-center justify-center mb-3 group-hover:from-orange-400/30 group-hover:to-pink-400/30 transition-colors">
-                  <Music className="w-8 h-8 text-orange-400 dark:text-orange-500" />
+                <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-primary/20 to-pink-400/20 dark:from-primary-900/40 dark:to-pink-900/40 flex items-center justify-center mb-3 group-hover:from-primary/30 group-hover:to-pink-400/30 transition-colors">
+                  <Music className="w-8 h-8 text-primary-400 dark:text-primary" />
                 </div>
 
                 <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{song.title}</h3>
@@ -69,7 +69,7 @@ export default function Songs() {
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-orange-500 transition-all duration-500"
+                      className="h-full rounded-full bg-primary transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

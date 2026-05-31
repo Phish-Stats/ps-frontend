@@ -11,7 +11,7 @@ function ShowRow({ show }: { show: Concert }) {
     <div className="flex items-center gap-4 py-3.5 px-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-xl transition-colors group">
       {/* Date column */}
       <div className="shrink-0 w-14 text-center">
-        <p className="text-xs font-semibold text-orange-500 uppercase">
+        <p className="text-xs font-semibold text-primary uppercase">
           {date.toLocaleDateString('en-US', { month: 'short' })}
         </p>
         <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{date.getDate()}</p>
@@ -36,7 +36,7 @@ function ShowRow({ show }: { show: Concert }) {
       {show.setlist_url && (
         <a
           href={show.setlist_url}
-          className="shrink-0 text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="shrink-0 text-xs text-primary hover:text-primary-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           Setlist <ArrowRight className="w-3 h-3" />
         </a>
@@ -73,7 +73,7 @@ export default function Shows() {
               onClick={() => setSelectedYear('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 selectedYear === 'all'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
@@ -85,7 +85,7 @@ export default function Shows() {
                 onClick={() => setSelectedYear(y)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   selectedYear === y
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >

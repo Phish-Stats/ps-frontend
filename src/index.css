@@ -2,15 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Brand token — change this one value to repaint the whole app ── */
 :root {
-  --color-primary: #F97316;
-  --color-bg-light: #F8FAFC;
-  --color-bg-dark: #0F172A;
-  --color-card-light: #FFFFFF;
-  --color-card-dark: #1E293B;
-  --color-text-light: #0F172A;
-  --color-text-dark: #F1F5F9;
-  --color-muted: #94A3B8;
+  --color-primary: #f97316;
 }
 
 html {
