@@ -56,7 +56,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   return (
     <div className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 shadow-lg text-sm">
       <p className="font-semibold text-slate-900 dark:text-white">{label}</p>
-      <p className="text-blue-500 font-medium">{payload[0].value} shows</p>
+      <p className="text-orange-500 font-medium">{payload[0].value} shows</p>
     </div>
   );
 }
@@ -117,7 +117,7 @@ function USMapCard() {
             className="absolute flex flex-col items-center"
             style={{ left: pin.x, top: pin.y, transform: 'translate(-50%, -50%)' }}
           >
-            <div className="w-3 h-3 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-800 shadow-md" />
+            <div className="w-3 h-3 rounded-full bg-orange-500 ring-2 ring-white dark:ring-slate-800 shadow-md" />
           </div>
         ))}
       </div>
@@ -143,7 +143,7 @@ export default function Dashboard() {
           icon={<Music2 className="w-4 h-4 text-white" />}
           value={stats.shows_attended}
           label="Shows Attended"
-          gradient="bg-blue-500"
+          gradient="bg-orange-500"
         />
         <StatChip
           icon={<ListMusicIcon />}
@@ -180,7 +180,7 @@ export default function Dashboard() {
                 <h2 className="text-base font-semibold text-slate-900 dark:text-white">Chasing List</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Songs you're hunting for</p>
               </div>
-              <Link to="/chasing" className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1">
+              <Link to="/chasing" className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1">
                 View all <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -226,10 +226,10 @@ export default function Dashboard() {
                   tick={{ fill: '#94A3B8', fontSize: 12 }}
                   width={24}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59,130,246,0.06)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(249,115,22,0.06)' }} />
                 <Bar
                   dataKey="count"
-                  fill="#3B82F6"
+                  fill="#F97316"
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
@@ -245,7 +245,7 @@ export default function Dashboard() {
                 <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Shows</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Last 5 concerts</p>
               </div>
-              <Link to="/shows" className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1">
+              <Link to="/shows" className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1">
                 All shows <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -253,7 +253,7 @@ export default function Dashboard() {
               {mockRecentConcerts.map((show) => (
                 <li key={show.id} className="flex items-center gap-3 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
                   <div className="shrink-0 w-10 text-center">
-                    <p className="text-xs font-semibold text-blue-500 uppercase">
+                    <p className="text-xs font-semibold text-orange-500 uppercase">
                       {new Date(show.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' })}
                     </p>
                     <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
@@ -267,7 +267,7 @@ export default function Dashboard() {
                   {show.setlist_url && (
                     <a
                       href={show.setlist_url}
-                      className="shrink-0 text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-0.5"
+                      className="shrink-0 text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5"
                     >
                       Setlist <ArrowRight className="w-3 h-3" />
                     </a>
@@ -280,7 +280,7 @@ export default function Dashboard() {
       </div>
 
       {/* Fun Stats Strip */}
-      <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-emerald-900/20 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-5">
+      <div className="bg-gradient-to-r from-orange-500/10 via-pink-500/10 to-amber-500/10 dark:from-orange-900/20 dark:via-pink-900/20 dark:to-amber-900/20 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-5">
         <div className="flex flex-wrap gap-6 justify-around">
           <FunStat
             icon={<Clock className="w-4 h-4 text-orange-400" />}
@@ -288,7 +288,7 @@ export default function Dashboard() {
             value="847 days"
           />
           <FunStat
-            icon={<Building2 className="w-4 h-4 text-blue-400" />}
+            icon={<Building2 className="w-4 h-4 text-orange-400" />}
             label="Favorite venue"
             value="MSG"
           />

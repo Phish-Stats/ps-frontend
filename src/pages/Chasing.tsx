@@ -63,7 +63,7 @@ export default function Chasing() {
         </div>
         <button
           onClick={() => setShowSearch(s => !s)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add song
@@ -81,7 +81,7 @@ export default function Chasing() {
               placeholder="Search songs..."
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
             />
           </div>
           {query.length > 0 && (
@@ -95,14 +95,14 @@ export default function Chasing() {
                       onClick={() => addSong(song.id)}
                       className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                        <Star className="w-3.5 h-3.5 text-blue-500" />
+                      <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center shrink-0">
+                        <Star className="w-3.5 h-3.5 text-orange-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 dark:text-white">{song.title}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">{song.album?.title} · {song.times_played} plays</p>
                       </div>
-                      <Plus className="w-4 h-4 text-blue-500 shrink-0" />
+                      <Plus className="w-4 h-4 text-orange-500 shrink-0" />
                     </button>
                   </li>
                 ))
@@ -131,15 +131,15 @@ export default function Chasing() {
                 onDrop={() => handleDrop(idx)}
                 onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
                 className={`flex items-center gap-4 px-5 py-4 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-all cursor-grab active:cursor-grabbing ${
-                  overIdx === idx && dragIdx !== idx ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                  overIdx === idx && dragIdx !== idx ? 'bg-orange-50 dark:bg-orange-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
                 }`}
               >
                 {/* Drag handle */}
                 <GripVertical className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
 
                 {/* Position */}
-                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-blue-500">{idx + 1}</span>
+                <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-bold text-orange-500">{idx + 1}</span>
                 </div>
 
                 {/* Info */}
