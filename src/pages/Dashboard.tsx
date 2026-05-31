@@ -267,7 +267,7 @@ function USMapCard({ visitedStates }: { visitedStates: Set<string> }) {
                     <circle
                       key={i}
                       cx={g.x} cy={g.y}
-                      r={6 / xform.k}
+                      r={7.5 / xform.k}
                       fill={activeGroup?.venue === g.venue ? '#ea580c' : '#f97316'}
                       stroke="white"
                       strokeWidth={1.5 / xform.k}
