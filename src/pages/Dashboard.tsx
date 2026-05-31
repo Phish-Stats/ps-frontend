@@ -89,7 +89,7 @@ function USMapCard() {
       <div className="relative w-full h-48 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
         <svg
           viewBox="0 0 960 600"
-          className="absolute inset-0 w-full h-full opacity-20 dark:opacity-10"
+          className="absolute inset-0 w-full h-full text-slate-400 dark:text-slate-500 opacity-40 dark:opacity-60"
           fill="none"
           stroke="currentColor"
           strokeWidth="1"
