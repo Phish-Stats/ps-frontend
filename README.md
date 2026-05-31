@@ -1,73 +1,116 @@
-# React + TypeScript + Vite
+# PhishStats — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web interface for PhishStats, a concert tracking app for Phish fans. Log the shows you've attended, browse setlists, and manage your chasing list — the songs you're hunting to finally hear live.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript**
+- **Vite** — dev server and build tool
+- **Tailwind CSS v3** — utility-first styling with a centralized theme
+- **React Router v6** — client-side routing
+- **TanStack Query** — server state and API data fetching
+- **Recharts** — charts and data visualization
+- **lucide-react** — icons
 
-## React Compiler
+## Pages
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard — stats overview, show map, chasing list preview, shows-per-year chart |
+| `/shows` | Full concert attendance history, filterable by year |
+| `/songs` | Phish discography with play counts, searchable |
+| `/chasing` | Your chasing list — up to 5 songs you want to hear live, drag to reorder |
 
-## Expanding the ESLint configuration
+## Local Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node 20+
+- The [ps-backend](https://github.com/Phish-Stats/ps-backend) running locally (see its README)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Install dependencies
+npm install
+
+# Copy env file and configure
+cp .env.example .env
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Edit `.env`:
+
+```env
+VITE_API_URL=http://localhost:8000   # URL of the running backend
+VITE_APP_NAME=PhishStats
+```
+
+### Run
+
+```bash
+npm run dev
+```
+
+App is available at [http://localhost:5173](http://localhost:5173).
+
+### Other commands
+
+```bash
+npm run build      # Production build (output in /dist)
+npm run preview    # Serve the production build locally
+npm run lint       # ESLint
+```
+
+## Docker
+
+### Standalone (frontend only)
+
+```bash
+cp .env.example .env   # edit VITE_API_URL to point at your backend
+docker compose up --build
+```
+
+The app is served by nginx at [http://localhost:3000](http://localhost:3000).
+
+> **Note:** Vite bakes `VITE_*` env vars into the bundle at build time. If you change `.env`, you need to rebuild the image (`docker compose up --build`).
+
+### With the backend
+
+If you're running the full stack via the backend's `docker-compose.yml`, you don't need this repo's compose file. Add the frontend as a service there instead, setting `VITE_API_URL` to the backend's internal service name (e.g. `http://backend:8000`).
+
+## Theming
+
+The primary color is defined once in `tailwind.config.js`:
 
 ```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+primary: {
+  50:  '#fff7ed',
+  // ...
+  DEFAULT: '#f97316',   // ← change this to repaint the app
+  500: '#f97316',
+  600: '#ea580c',
+  // ...
+}
 ```
+
+Dark/light mode is toggled via the sun/moon button in the nav. The preference is saved to `localStorage`.
+
+## Project Structure
+
+```
+src/
+├── components/       # Shared UI (Layout, nav)
+├── context/          # ThemeContext
+├── lib/
+│   ├── api.ts        # Typed fetch wrapper — reads VITE_API_URL
+│   └── mockData.ts   # Placeholder data (replaced by API calls over time)
+├── pages/            # Route-level components
+└── types/            # TypeScript interfaces matching the backend models
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes | Base URL of the ps-backend API (e.g. `http://localhost:8000`) |
+| `VITE_APP_NAME` | No | App name shown in the browser tab (default: `PhishStats`) |
