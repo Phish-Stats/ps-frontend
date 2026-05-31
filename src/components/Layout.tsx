@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Sun, Moon, BarChart2, Music, ListMusic, Star, Donut } from 'lucide-react';
+import { Sun, Moon, BarChart2, Music, ListMusic, Star } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const navItems = [
@@ -18,13 +18,8 @@ export default function Layout() {
       <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-16 gap-6">
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Donut className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-lg tracking-tight hidden sm:block">
-              Phish<span className="text-primary">Stats</span>
-            </span>
+          <NavLink to="/" className="shrink-0">
+            <img src="/ps-header.png" alt="PhishStats" className="h-10 w-auto" />
           </NavLink>
 
           {/* Desktop Nav Links */}
