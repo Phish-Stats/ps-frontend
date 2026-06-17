@@ -1,39 +1,48 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { /* Sun, Moon, */ BarChart2, Music, ListMusic, Star } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { BarChart2, Music, ListMusic, Star, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: BarChart2, exact: true },
-  { to: '/shows', label: 'Shows', icon: Music },
-  { to: '/songs', label: 'Songs', icon: ListMusic },
-  { to: '/chasing', label: 'Chasing', icon: Star },
+  { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
+  { to: '/shows',     label: 'Shows',     icon: Music },
+  { to: '/songs',     label: 'Songs',     icon: ListMusic },
+  { to: '/chasing',   label: 'Chasing',   icon: Star },
 ];
 
 export default function Layout() {
-  const { theme: _theme, toggleTheme: _toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
+
+  const initials = user
+    ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    : 'PH';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F1F5F9] transition-colors duration-200">
-      {/* Header Banner — edge-to-edge */}
-      <NavLink to="/" className="block w-full">
+      {/* Header Banner */}
+      <Link to="/dashboard" className="block w-full">
         <img
           src="/ps-header.png"
           alt="PhishStats"
           className="w-full object-cover object-center block"
           style={{ height: '144px' }}
         />
-      </NavLink>
+      </Link>
 
       {/* Sticky Nav */}
       <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-1 flex-1">
-            {navItems.map(({ to, label, icon: Icon, exact }) => (
+            {navItems.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
-                end={exact}
                 className={({ isActive }) =>
                   `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
                     isActive
@@ -49,19 +58,26 @@ export default function Layout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            {/* Theme Toggle */}
-            {/* <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button> */}
+            {/* User name */}
+            {user && (
+              <span className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
+                {user.first_name} {user.last_name}
+              </span>
+            )}
 
             {/* User Avatar */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold select-none cursor-pointer">
-              PH
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold select-none">
+              {initials}
             </div>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Log out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </header>
@@ -73,16 +89,13 @@ export default function Layout() {
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#1E293B] border-t border-slate-200 dark:border-slate-700 flex">
-        {navItems.map(({ to, label, icon: Icon, exact }) => (
+        {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
-            end={exact}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs transition-colors duration-150 ${
-                isActive
-                  ? 'text-primary'
-                  : 'text-slate-500 dark:text-slate-400'
+                isActive ? 'text-primary' : 'text-slate-500 dark:text-slate-400'
               }`
             }
           >
