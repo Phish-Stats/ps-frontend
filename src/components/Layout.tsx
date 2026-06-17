@@ -19,7 +19,8 @@ export default function Layout() {
         <img
           src="/ps-header.png"
           alt="PhishStats"
-          className="w-full h-36 object-cover object-center block"
+          className="w-full object-cover object-center block"
+          style={{ height: '240px' }}
         />
       </NavLink>
 
