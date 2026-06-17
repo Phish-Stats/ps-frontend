@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Sun, Moon, BarChart2, Music, ListMusic, Star } from 'lucide-react';
+import { /* Sun, Moon, */ BarChart2, Music, ListMusic, Star } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const navItems = [
@@ -10,7 +10,7 @@ const navItems = [
 ];
 
 export default function Layout() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme: _theme, toggleTheme: _toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F1F5F9] transition-colors duration-200">
@@ -50,13 +50,13 @@ export default function Layout() {
 
           <div className="ml-auto flex items-center gap-3">
             {/* Theme Toggle */}
-            <button
+            {/* <button
               onClick={toggleTheme}
               className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
+            </button> */}
 
             {/* User Avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold select-none cursor-pointer">
