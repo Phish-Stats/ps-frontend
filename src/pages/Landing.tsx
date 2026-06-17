@@ -1,17 +1,23 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Music2, TrendingUp } from 'lucide-react';
-import { mockAllConcerts, mockRecentConcerts, mockSongs, mockChasingList } from '../lib/mockData';
+import { mockSongs, mockChasingList } from '../lib/mockData';
 import USMap from '../components/USMap';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 
-const THIS_YEAR = 2024; // mock data goes to 2024
-const tourConcerts = mockAllConcerts.filter(c => new Date(c.date).getFullYear() === THIS_YEAR);
-const tourStates   = new Set(tourConcerts.map(c => c.state));
-const topSongs     = [...mockSongs].sort((a, b) => b.times_played - a.times_played).slice(0, 8);
+const THIS_YEAR = new Date().getFullYear();
+const topSongs = [...mockSongs].sort((a, b) => b.times_played - a.times_played).slice(0, 8);
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+
+  const { data: tourConcerts = [] } = useQuery({
+    queryKey: ['concerts', THIS_YEAR],
+    queryFn: () => api.getConcerts(THIS_YEAR),
+  });
+  const tourStates = new Set(tourConcerts.map(c => c.state_abbr).filter(s => s !== ''));
 
   return (
     <div className="space-y-6">
@@ -56,7 +62,11 @@ export default function Landing() {
               <p className="text-sm text-slate-500 dark:text-slate-400">Latest Phish concerts</p>
             </div>
             <ul className="space-y-1">
-              {mockRecentConcerts.map(show => (
+              {[...tourConcerts]
+                .filter(c => c.date <= new Date().toISOString().slice(0, 10))
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 5)
+                .map(show => (
                 <li key={show.id} className="flex items-center gap-3 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
                   <div className="shrink-0 w-10 text-center">
                     <p className="text-xs font-semibold text-primary uppercase">
